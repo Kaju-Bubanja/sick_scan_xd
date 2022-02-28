@@ -77,6 +77,7 @@
 #include <sick_scan/sick_generic_field_mon.h>
 #include <sick_scan/helper/angle_compensator.h>
 #include <sick_scan/sick_scan_config_internal.h>
+#include <sick_scan/sick_scan_parse_util.h>
 
 #include "sick_scan/binScanf.hpp"
 #include "sick_scan/dataDumper.h"
@@ -1020,6 +1021,72 @@ namespace sick_scan
 
   }
 
+  int SickScanCommon::sendSopasAorBgetAnswer(const std::string& sopasCmd, std::vector<unsigned char> *reply, bool useBinaryCmd)
+  {
+    int result = -1;
+    std::vector<unsigned char> replyDummy, reqBinary;
+    int prev_sopas_type = this->getProtocolType();
+    this->setProtocolType(useBinaryCmd ? CoLa_B : CoLa_A);
+    if (useBinaryCmd)
+    {
+      this->convertAscii2BinaryCmd(sopasCmd.c_str(), &reqBinary);
+      result = sendSopasAndCheckAnswer(reqBinary, &replyDummy);
+    }
+    else
+    {
+      result = sendSopasAndCheckAnswer(sopasCmd.c_str(), &replyDummy);
+    }
+    if(reply)
+      *reply = replyDummy;
+    this->setProtocolType((SopasProtocol)prev_sopas_type); // restore previous sopas type
+    return result;
+  }
+
+  // Check Cola-Configuration of the scanner:
+  // * Send "sRN DeviceState" with configured cola-dialect (Cola-B = useBinaryCmd)
+  // * If lidar does not answer:
+  //   * Send "sRN DeviceState" with different cola-dialect (Cola-B = !useBinaryCmd)
+  //   * If lidar sends a response:
+  //     * Switch to configured cola-dialect (Cola-B = useBinaryCmd) using "sWN EIHstCola" and restart
+  ExitCode SickScanCommon::checkColaTypeAndSwitchToConfigured(bool useBinaryCmd)
+  {
+    if (sendSopasAorBgetAnswer(sopasCmdVec[CMD_DEVICE_STATE], 0, useBinaryCmd) != 0) // no answer
+    {
+      ROS_WARN_STREAM("checkColaDialect: lidar response not in configured Cola-dialect Cola-" << (useBinaryCmd ? "B" : "A") << ", trying different Cola configuration");
+      std::vector<unsigned char> sopas_response;
+      if (sendSopasAorBgetAnswer(sopasCmdVec[CMD_DEVICE_STATE], &sopas_response, !useBinaryCmd) != 0) // no answer
+      {
+        ROS_WARN_STREAM("checkColaDialect: no lidar response in any cola configuration, check lidar and network!");
+        ROS_WARN_STREAM("SickScanCommon::init_scanner() failed, aborting.");
+        return ExitError;
+      }
+      else
+      {
+        ROS_WARN_STREAM("checkColaDialect: lidar response in configured Cola-dialect Cola-" << (!useBinaryCmd ? "B" : "A") << ", changing Cola configuration and restart!");
+        std::vector<std::string> sopas_change_cola_commands = {
+          sopasCmdVec[CMD_SET_ACCESS_MODE_3],
+          sopasCmdVec[(useBinaryCmd ? CMD_SET_TO_COLA_B_PROTOCOL : CMD_SET_TO_COLA_A_PROTOCOL)]
+        };
+        for(int n = 0; n < sopas_change_cola_commands.size(); n++)
+        {
+          if (sendSopasAorBgetAnswer(sopas_change_cola_commands[n], &sopas_response, !useBinaryCmd) != 0) // no answer
+          {
+            ROS_WARN_STREAM("checkColaDialect: no lidar response to sopas requests \"" << sopas_change_cola_commands[n] << "\", aborting");
+            return ExitError;
+          }
+        }
+        ROS_INFO_STREAM("checkColaDialect: restarting after Cola configuration change.");
+        return ExitError;
+      }
+    }
+    else
+    {
+      ROS_INFO_STREAM("checkColaDialect: lidar response in configured Cola-dialect Cola-" << (useBinaryCmd ? "B" : "A"));
+    }
+    return ExitSuccess;
+  }
+
+
   /*!
   \brief set timeout in milliseconds
   \param timeOutInMs in milliseconds
@@ -1205,7 +1272,8 @@ namespace sick_scan
      *                      +------------------------------------------------> 0x0320   --> 0800   -> 8 Hz scanfreq
     */
     //                                                                   0320 01 09C4 0 0036EE80 09C4 0 0 09C4 0 0 09C4 0 0
-
+    sopasCmdVec[CMD_GET_SCANDATACONFIGNAV] = "\x02sRN LMPscancfg\x03";
+    sopasCmdVec[CMD_SEN_SCANDATACONFIGNAV] = "\x02sEN LMPscancfg 1\x03";
     sopasCmdVec[CMD_SET_LFEREC_ACTIVE] = "\x02sEN LFErec 1\x03";              // TiM781S: activate LFErec messages, send "sEN LFErec 1"
     sopasCmdVec[CMD_SET_LID_OUTPUTSTATE_ACTIVE] = "\x02sEN LIDoutputstate 1\x03"; // TiM781S: activate LIDoutputstate messages, send "sEN LIDoutputstate 1"
     sopasCmdVec[CMD_SET_LID_INPUTSTATE_ACTIVE] = "\x02sEN LIDinputstate 1\x03"; // TiM781S: activate LIDinputstate messages, send "sEN LIDinputstate 1"
@@ -1301,6 +1369,8 @@ namespace sick_scan
     sopasCmdErrMsg[CMD_SET_ENCODER_MODE] = "Error activating encoder in single incremnt mode";
     sopasCmdErrMsg[CMD_SET_INCREMENTSOURCE_ENC] = "Error seting encoder increment source to Encoder";
     sopasCmdErrMsg[CMD_SET_SCANDATACONFIGNAV] = "Error setting scandata config";
+    sopasCmdErrMsg[CMD_GET_SCANDATACONFIGNAV] = "Error getting scandata config";
+    sopasCmdErrMsg[CMD_SEN_SCANDATACONFIGNAV] = "Error setting sEN LMPscancfg";
     sopasCmdErrMsg[CMD_SET_LFEREC_ACTIVE] = "Error activating LFErec messages";
     sopasCmdErrMsg[CMD_SET_LID_OUTPUTSTATE_ACTIVE] = "Error activating LIDoutputstate messages";
     sopasCmdErrMsg[CMD_SET_LID_INPUTSTATE_ACTIVE] = "Error activating LIDinputstate messages";
@@ -1409,15 +1479,25 @@ namespace sick_scan
     sopasCmdChain.push_back(CMD_OPERATION_HOURS); // read operation hours
     sopasCmdChain.push_back(CMD_POWER_ON_COUNT); // read power on count
     sopasCmdChain.push_back(CMD_LOCATION_NAME); // read location name
-    /*
-    if (parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_NAV_3XX_NAME) == 0)
+
+    // Support for "sRN LMPscancfg" and "sMN mLMPsetscancfg" for NAV_3xx and LRS_36x1 since version 2.4.4
+    // TODO: apply and test for LRS_36x0 and OEM_15XX, too
+    // if (this->parser_->getCurrentParamPtr()->getUseScancfgList() == true) // true for SICK_SCANNER_LRS_36x0_NAME, SICK_SCANNER_LRS_36x1_NAME, SICK_SCANNER_NAV_3XX_NAME, SICK_SCANNER_OEM_15XX_NAME
+    if (parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_LRS_36x1_NAME) == 0
+    || parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_NAV_3XX_NAME) == 0) 
     {
-      sopasCmdChain.push_back(CMD_SET_SCANDATACONFIGNAV);
+      sopasCmdChain.push_back(CMD_GET_SCANDATACONFIGNAV); // Read LMPscancfg by "sRN LMPscancfg"
+      sopasCmdChain.push_back(CMD_SET_SCAN_CFG_LIST); // "sMN mCLsetscancfglist 1", set scan config from list for NAX310  LD-OEM15xx LD-LRS36xx
+      sopasCmdChain.push_back(CMD_RUN); // Apply changes, note by manual: "the new values will be activated only after log out (from the user level), when re-entering the Run mode"
+      sopasCmdChain.push_back(CMD_SET_ACCESS_MODE_3); // re-enter authorized client level
+      sopasCmdChain.push_back(CMD_GET_SCANDATACONFIGNAV); // Read LMPscancfg by "sRN LMPscancfg"
+      sopasCmdChain.push_back(CMD_SET_SCANDATACONFIGNAV); // Set configured start/stop angle using "sMN mLMPsetscancfg"
+      sopasCmdChain.push_back(CMD_RUN); // Apply changes, note by manual: "the new values will be activated only after log out (from the user level), when re-entering the Run mode"
+      sopasCmdChain.push_back(CMD_SET_ACCESS_MODE_3); // re-enter authorized client level
+      sopasCmdChain.push_back(CMD_GET_SCANDATACONFIGNAV); // Read LMPscancfg by "sRN LMPscancfg"
     }
-     */
 
     return (0);
-
   }
 
 
@@ -1596,6 +1676,20 @@ namespace sick_scan
       NAV3xxOutputRangeSpecialHandling = true;
     }
 
+    // Check Cola-Configuration of the scanner:
+    // * Send "sRN DeviceState" with configured cola-dialect (Cola-B = useBinaryCmd)
+    // * If lidar does not answer:
+    //   * Send "sRN DeviceState" with different cola-dialect (Cola-B = !useBinaryCmd)
+    //   * If lidar sends a response:
+    //     * Switch to configured cola-dialect (Cola-B = useBinaryCmd) using "sWN EIHstCola" and restart
+    if (checkColaTypeAndSwitchToConfigured(useBinaryCmd) != ExitSuccess)
+    {
+      ROS_WARN_STREAM("SickScanCommon::init_scanner(): checkColaDialect failed, restarting.");
+      ROS_WARN_STREAM("It is recommended to use the binary communication (Cola-B) by:");
+      ROS_WARN_STREAM("1. setting parameter use_binary_protocol true in the launch file, and");
+      ROS_WARN_STREAM("2. setting the lidar communication mode with the SOPAS ET software to binary and save this setting in the scanner's EEPROM.");
+      return ExitError;
+    }
 
     for (size_t i = 0; i < this->sopasCmdChain.size(); i++)
     {
@@ -1603,6 +1697,8 @@ namespace sick_scan
 
       int cmdId = sopasCmdChain[i]; // get next command
       std::string sopasCmd = sopasCmdVec[cmdId];
+      if (sopasCmd.empty()) // skip sopas command, i.e. use default values
+        continue;
       std::vector<unsigned char> replyDummy;
       std::vector<unsigned char> reqBinary;
 
@@ -1997,7 +2093,82 @@ namespace sick_scan
           // if (parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_NAV_2XX_NAME) == 0)
 
           // ML: add here reply handling
-      }
+
+        case CMD_GET_SCANDATACONFIGNAV:
+        {
+          // Here we get the reply to "sRN LMPscancfg". We use this reply to set the scan configuration (frequency, start and stop angle)
+          // for the following "sMN mCLsetscancfglist" and "sMN mLMPsetscancfg ..." commands
+          int cfgListEntry = 1;
+          rosGetParam(nh, "scan_cfg_list_entry", cfgListEntry);
+          sopasCmdVec[CMD_SET_SCAN_CFG_LIST] = "\x02sMN mCLsetscancfglist " + std::to_string(cfgListEntry) + "\x03"; // set scan config from list for NAX310  LD - OEM15xx LD - LRS36xx
+          sopasCmdVec[CMD_SET_SCANDATACONFIGNAV] = ""; // set start and stop angle by LMPscancfgToSopas()
+          sick_scan::SickScanParseUtil::LMPscancfg scancfg;
+          if (sick_scan::SickScanParseUtil::SopasToLMPscancfg(sopasReplyStrVec[cmdId], scancfg))
+          {
+            // Overwrite start and stop angle with configured values
+            for (int sector_cnt = 0; sector_cnt < scancfg.sector_cfg.size() && sector_cnt < scancfg.active_sector_cnt; sector_cnt++)
+            {
+              // Compensate angle shift (min/max angle from config in ros-coordinate system)
+              double start_ang_rad = (scancfg.sector_cfg[sector_cnt].start_angle / 10000.0) * (M_PI / 180.0);
+              double stop_ang_rad = (scancfg.sector_cfg[sector_cnt].stop_angle / 10000.0) * (M_PI / 180.0);
+              if (parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_NAV_3XX_NAME) == 0) // map ros start/stop angle to NAV-3xx logic
+              {
+                // NAV-3xx rotates the scan depending on start/stop angles => TODO: Set angle shift to (360 - nav_stop_angle) ???
+                // this->parser_->getCurrentParamPtr()->setScanAngleShift(2 * M_PI - stop_ang_rad);
+                // ROS_INFO_STREAM("NAV-3xx angle shift set to " << rad2deg(this->parser_->getCurrentParamPtr()->getScanAngleShift()) << " deg");
+                // TODO: map ros start/stop angle to NAV-3xx logic
+                start_ang_rad = 0; // this->config_.min_ang;
+                stop_ang_rad = 2 * M_PI; // this->config_.max_ang;
+                /*
+                double start_ang_ros = start_ang_rad, stop_ang_ros = stop_ang_rad;
+                start_ang_rad = sick_scan::normalizeAngleRad(stop_ang_ros - M_PI, 0.0, 2 * M_PI);
+                stop_ang_rad = start_ang_rad + (stop_ang_ros - start_ang_ros);
+                stop_ang_rad = std::min(stop_ang_rad, 2 * M_PI); // stop_ang_rad = sick_scan::normalizeAngleRad(stop_ang_rad, 0.0, 2 * M_PI);
+                */
+              }
+              else
+              {
+                // Compensate angle shift (min/max angle from config in ros-coordinate system)
+                double angle_offset_rad = this->parser_->getCurrentParamPtr()->getScanAngleShift();
+                start_ang_rad = this->config_.min_ang - angle_offset_rad;
+                stop_ang_rad = this->config_.max_ang - angle_offset_rad;
+              }
+              scancfg.sector_cfg[sector_cnt].start_angle = (int32_t)(std::round(10000.0 * rad2deg(start_ang_rad)));
+              scancfg.sector_cfg[sector_cnt].stop_angle = (int32_t)(std::round(10000.0 * rad2deg(stop_ang_rad)));
+              ROS_INFO_STREAM("Setting LMPscancfg start_angle: " << rad2deg(start_ang_rad) << " deg, stop_angle: " << rad2deg(stop_ang_rad) << " deg (lidar sector " << sector_cnt << ")");
+            }
+            ROS_INFO_STREAM("Setting LMPscancfg start_angle: " << rad2deg(this->config_.min_ang) << " deg, stop_angle: " << rad2deg(this->config_.max_ang) << " deg (ROS)");
+            if(sick_scan::SickScanParseUtil::LMPscancfgToSopas(scancfg, sopasCmdVec[CMD_SET_SCANDATACONFIGNAV]))
+            {
+              ROS_INFO_STREAM("Setting LMPscancfg sopas command: \"" << sopasCmdVec[CMD_SET_SCANDATACONFIGNAV] << "\"");
+            }
+            else
+            {
+              ROS_WARN_STREAM("## ERROR in init_scanner(): SickScanParseUtil::LMPscancfgToSopas() failed, start/stop angle not set, default values will be used.");
+            }
+          }
+          else
+          {
+            ROS_WARN_STREAM("## ERROR in init_scanner(): SickScanParseUtil::SopasToLMPscancfg() failed, start/stop angle not set, default values will be used.");
+          }
+        }
+        break;
+
+        case CMD_SET_SCANDATACONFIGNAV: // Parse and print the reply to "sMN mLMPsetscancfg"
+        {
+            sick_scan::SickScanParseUtil::LMPscancfg scancfg;
+            sick_scan::SickScanParseUtil::SopasToLMPscancfg(sopasReplyStrVec[cmdId], scancfg);
+        }
+        break;
+
+        case CMD_GET_PARTIAL_SCAN_CFG: // Parse and print the reply to "sRN LMPscancfg"
+        {
+            sick_scan::SickScanParseUtil::LMPscancfg scancfg;
+            sick_scan::SickScanParseUtil::SopasToLMPscancfg(sopasReplyStrVec[cmdId], scancfg);
+        }
+        break;
+
+      } // end of switch (cmdId)
 
 
       if (restartDueToProcolChange)
@@ -2055,29 +2226,38 @@ namespace sick_scan
 
       if (this->parser_->getCurrentParamPtr()->getUseScancfgList())
       {
-//scanconfig handling with List
-        char requestsMNmCLsetscancfglist[MAX_STR_LEN];
-        int cfgListEntry;
-        //rosDeclareParam(nh, "scan_cfg_list_entry", cfgListEntry);
-        rosGetParam(nh, "scan_cfg_list_entry", cfgListEntry);
-        // Uses sprintf-Mask to set bitencoded echos and rssi enable flag
-        const char *pcCmdMask = sopasCmdMaskVec[CMD_SET_SCAN_CFG_LIST].c_str();
-        sprintf(requestsMNmCLsetscancfglist, pcCmdMask, cfgListEntry);
-        if (useBinaryCmd)
+        if (parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_LRS_36x1_NAME) == 0
+        || parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_NAV_3XX_NAME) == 0) 
         {
-          std::vector<unsigned char> reqBinary;
-          this->convertAscii2BinaryCmd(requestsMNmCLsetscancfglist, &reqBinary);
-          // FOR MRS6124 this should be
-          // like this:
-          // 0000  02 02 02 02 00 00 00 20 73 57 4e 20 4c 4d 44 73   .......sWN LMDs
-          // 0010  63 61 6e 64 61 74 61 63 66 67 20 1f 00 01 01 00   candatacfg .....
-          // 0020  00 00 00 00 00 00 00 01 5c
-          result = sendSopasAndCheckAnswer(reqBinary, &sopasReplyBinVec[CMD_SET_SCAN_CFG_LIST]);
+          // scanconfig handling with list now done above via sopasCmdChain,
+          // deactivated here, otherwise the scan config will be (re-)set to default values
         }
-        else
+        else // i.e. SICK_SCANNER_LRS_36x0_NAME, SICK_SCANNER_OEM_15XX_NAME
         {
-          std::vector<unsigned char> lmdScanDataCfgReply;
-          result = sendSopasAndCheckAnswer(requestsMNmCLsetscancfglist, &lmdScanDataCfgReply);
+          // scanconfig handling with list
+          char requestsMNmCLsetscancfglist[MAX_STR_LEN];
+          int cfgListEntry;
+          //rosDeclareParam(nh, "scan_cfg_list_entry", cfgListEntry);
+          rosGetParam(nh, "scan_cfg_list_entry", cfgListEntry);
+          // Uses sprintf-Mask to set bitencoded echos and rssi enable flag
+          const char *pcCmdMask = sopasCmdMaskVec[CMD_SET_SCAN_CFG_LIST].c_str();
+          sprintf(requestsMNmCLsetscancfglist, pcCmdMask, cfgListEntry);
+          if (useBinaryCmd)
+          {
+            std::vector<unsigned char> reqBinary;
+            this->convertAscii2BinaryCmd(requestsMNmCLsetscancfglist, &reqBinary);
+            // FOR MRS6124 this should be
+            // like this:
+            // 0000  02 02 02 02 00 00 00 20 73 57 4e 20 4c 4d 44 73   .......sWN LMDs
+            // 0010  63 61 6e 64 61 74 61 63 66 67 20 1f 00 01 01 00   candatacfg .....
+            // 0020  00 00 00 00 00 00 00 01 5c
+            result = sendSopasAndCheckAnswer(reqBinary, &sopasReplyBinVec[CMD_SET_SCAN_CFG_LIST]);
+          }
+          else
+          {
+            std::vector<unsigned char> lmdScanDataCfgReply;
+            result = sendSopasAndCheckAnswer(requestsMNmCLsetscancfglist, &lmdScanDataCfgReply);
+          }
         }
       }
       else // CMD_GET_OUTPUT_RANGE (i.e. handling of LMDscandatacfg
@@ -2299,6 +2479,9 @@ namespace sick_scan
 
       if (result == 0)
       {
+        sick_scan::SickScanParseUtil::LMPscancfg scancfg;
+        sick_scan::SickScanParseUtil::SopasToLMPscancfg(replyToString(askOutputAngularRangeReply), scancfg);
+
         char dummy0[MAX_STR_LEN] = {0};
         char dummy1[MAX_STR_LEN] = {0};
         int dummyInt = 0;
@@ -2792,9 +2975,9 @@ namespace sick_scan
       }
       */
 
-      // CONFIG ECHO-Filter (only for MRS1000 not available for TiM5xx
+      // CONFIG ECHO-Filter (only for MRS1xxx and MRS6xxx, not available for TiM5xx)
       //if (this->parser_->getCurrentParamPtr()->getNumberOfLayers() >= 4)
-        if (true)
+      if (this->parser_->getCurrentParamPtr()->getFREchoFilterAvailable())
       {
         char requestEchoSetting[MAX_STR_LEN];
         int filterEchoSetting = 0;
@@ -2922,21 +3105,6 @@ namespace sick_scan
     }
     else
     {
-      // initializing sequence for laserscanner
-      // is this device a TiM240????
-      // The TiM240 can not interpret CMD_START_MEASUREMENT
-      if (this->parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_TIM_240_NAME) == 0)
-      {
-        // the TiM240 operates directly in the ros coordinate system
-        // do nothing for a TiM240
-      }
-      else
-      {
-        startProtocolSequence.push_back(CMD_START_MEASUREMENT);
-      }
-      startProtocolSequence.push_back(CMD_RUN);  // leave user level
-      startProtocolSequence.push_back(CMD_START_SCANDATA);
-
       if (parser_->getCurrentParamPtr()->getUseEvalFields() == USE_EVAL_FIELD_TIM7XX_LOGIC || parser_->getCurrentParamPtr()->getUseEvalFields() == USE_EVAL_FIELD_LMS5XX_LOGIC)
       {
         
@@ -2961,6 +3129,21 @@ namespace sick_scan
           ROS_INFO_STREAM(parser_->getCurrentParamPtr()->getScannerName() << ": activating field monitoring by lidinputstate messages");
         }
       }
+
+      // initializing sequence for laserscanner
+      // is this device a TiM240????
+      // The TiM240 can not interpret CMD_START_MEASUREMENT
+      if (this->parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_TIM_240_NAME) == 0)
+      {
+        // the TiM240 operates directly in the ros coordinate system
+        // do nothing for a TiM240
+      }
+      else
+      {
+        startProtocolSequence.push_back(CMD_START_MEASUREMENT);
+      }
+      startProtocolSequence.push_back(CMD_RUN);  // leave user level
+      startProtocolSequence.push_back(CMD_START_SCANDATA);
 
       if (this->parser_->getCurrentParamPtr()->getNumberOfLayers() == 4)  // MRS1104 - start IMU-Transfer
       {
@@ -3947,8 +4130,10 @@ namespace sick_scan
 
                               if (this->parser_->getCurrentParamPtr()->getScanMirroredAndShifted())
                               {
+                                /* TODO: Check this ...
                                 msg.angle_min -= (float)(M_PI / 2);
                                 msg.angle_max -= (float)(M_PI / 2);
+                                */
 
                                 msg.angle_min *= -1.0;
                                 msg.angle_increment *= -1.0;
@@ -4373,7 +4558,7 @@ namespace sick_scan
               float angleShift=0;
               if (this->parser_->getCurrentParamPtr()->getScanMirroredAndShifted())
               {
-//                mirror_factor = -1.0;
+/**/                mirror_factor = -1.0;
 //                angleShift = +M_PI/2.0; // add 90 deg for NAV3xx-series
               }
 
@@ -4451,8 +4636,8 @@ namespace sick_scan
                   {
                     phi_used = angleCompensator->compensateAngleInRadFromRos(phi_used);
                   }
-                  fptr[idx_x] = rangeCos * (float)cos(phi_used);  // copy x value in pointcloud
-                  fptr[idx_y] = rangeCos * (float)sin(phi_used);  // copy y value in pointcloud
+                  fptr[idx_x] = rangeCos * (float)cos(phi_used) * mirror_factor;  // copy x value in pointcloud
+                  fptr[idx_y] = rangeCos * (float)sin(phi_used) * mirror_factor;  // copy y value in pointcloud
                   fptr[idx_z] = range_meter * sinAlphaTablePtr[i] * mirror_factor;// copy z value in pointcloud
 
                   fptr[idx_intensity] = 0.0;
@@ -4889,6 +5074,14 @@ namespace sick_scan
     // 21
     if (cmdAscii.find(keyWord7) != std::string::npos)
     {
+#if 1
+        bufferLen = 0;
+        for (int i = keyWord7.length() + 2, i_max = strlen(requestAscii) - 1; i + 3 < i_max && bufferLen < sizeof(buffer); i += 4, bufferLen++)
+        {
+            char hex_str[] = { requestAscii[i + 2], requestAscii[i + 3], '\0' };
+            buffer[bufferLen] = (std::stoul(hex_str, nullptr, 16) & 0xFF);
+        }
+#else
       if (this->parser_->getCurrentParamPtr()->getScannerName().compare(SICK_SCANNER_NAV_3XX_NAME) != 0)
       {
         {
@@ -4957,6 +5150,7 @@ namespace sick_scan
 
         }
       }
+#endif
 
     }
     if (cmdAscii.find(keyWord8) != std::string::npos)

@@ -2,7 +2,8 @@
 
 This project provides the driver for the SICK lidar and radar sensors mentioned in the following list.
 
-Based on the sick_scan drivers for ROS1, sick_scan_xd merges sick_scan, sick_scan2 and sick_scan_base repositories. The driver supports both Linux (native, ROS1, ROS2) and Windows (native and ROS2).
+Based on the sick_scan drivers for ROS1, sick_scan_xd merges sick_scan, sick_scan2 and sick_scan_base repositories. The driver supports both Linux (native, ROS1, ROS2) and Windows (native and ROS2). See the [CHANGELOG.md](CHANGELOG.md) for the latest updates.
+
 
 ## Table of Contents
 
@@ -15,6 +16,13 @@ Based on the sick_scan drivers for ROS1, sick_scan_xd merges sick_scan, sick_sca
 - [Build on Windows](#build-on-windows)
 - [Build on Windows ROS2](#build-on-windows-ros2)
 - [Run sick_scan driver](#run-sick_scan-driver)
+   - [Start Multiple Nodes](#start-multiple-nodes)
+   - [Common parameters](#common-parameters)
+   - [Starting Scanner with Specific Ip Address](#starting-scanner-with-specific-ip-address)
+   - [Further useful parameters and features](#further-useful-parameters-and-features)
+   - [ROS services](#ros-services)
+   - [Driver states, timeouts](#driver-states-timeouts)
+- [Sopas Mode](#sopas-mode)
 - [Bugs and feature requests](#bugs-and-feature-requests)
 - [Tools](#tools)
 - [Troubleshooting](#troubleshooting)
@@ -415,12 +423,21 @@ Use the following commands to run the sick_scan driver for a specific scanner ty
     * Windows native: `sick_generic_caller sick_rms_1xxx.launch`
     * Windows ROS-2:  `ros2 run sick_scan sick_generic_caller ./src/sick_scan_xd/launch/sick_rms_1xxx.launch`
 
-
 Common commandline options are
 
 - `hostname:=<ip-address>` to connect to a sensor with a given IP address. Default value is always the factory default IP address of the scanner.
 
 Further (common and scanner specific) options can be set via launchfile, see [Common parameters](#common-parameters) and configure the settings in the launchfile corresponding to the scanner type.
+
+Note: After modifying a launch-file, it has to be installed by running `catkin_make_isolated --install --cmake-args -DROS_VERSION=1`
+to be located and used by `roslaunch`.
+
+On ROS-2 you can launch sick_generic_caller by python-launchfiles, too. Use
+```
+ros2 launch sick_scan <name>.launch.py <param>:=<value>
+```
+E.g. for LMS-5xx: `ros2 launch sick_scan sick_lms_5xx.launch.py hostname:=192.168.0.1`
+
 
 ### Start Multiple Nodes
 
@@ -590,12 +607,13 @@ while(true) ; do roslaunch sick_scan <launchfile> [<arguments>] ; done
 
 ## Sopas Mode
 
-This driver supports both COLA-B (binary) and COLA-A (ASCII) communication with the laser scanner. Binary mode is activated by default. Since this mode generates less network traffic.
+This driver supports both COLA-B (binary) and COLA-A (ASCII) communication with the laser scanner. Binary mode is activated by default, since this mode generates less network traffic and enables more compatibility to all scanners.
 If the communication mode set in the scanner memory is different from that used by the driver, the scanner's communication mode is changed. This requires a restart of the TCP-IP connection, which can extend the start time by up to 30 seconds.
 There are two ways to prevent this:
-1. [Recommended] Set the communication mode with the SOPAS ET software to binary and save this setting in the scanner's EEPROM.
+1. Recommended:
+   * Set the communication mode with the SOPAS ET software to binary and save this setting in the scanner's EEPROM.
+   * Set "use_binary_protocol" to default value "true".
 2. Use the parameter "use_binary_protocol" to overwrite the default settings of the driver.
-3. Setting "use_binary_protocol" to "False" activates COLA-A and disables COLA-B (default)
 
 ## Bugs and Feature Requests
 
