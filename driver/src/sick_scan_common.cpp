@@ -3726,12 +3726,12 @@ namespace sick_scan
 
         ros_sensor_msgs::LaserScan msg;
         sick_scan_msg::Encoder EncoderMsg;
-        EncoderMsg.header.stamp = recvTimeStamp + rosDuration(config_.time_offset);
+        EncoderMsg.header.stamp = recvTimeStamp + rosDuration::from_seconds(config_.time_offset);
         //TODO remove this hardcoded variable
         bool FireEncoder = false;
         EncoderMsg.header.frame_id = "Encoder";
         ROS_HEADER_SEQ(EncoderMsg.header, numPacketsProcessed);
-        msg.header.stamp = recvTimeStamp + rosDuration(config_.time_offset);
+        msg.header.stamp = recvTimeStamp + rosDuration::from_seconds(config_.time_offset);
         double elevationAngleInRad = 0.0;
         short elevAngleX200 = 0;  // signed short (F5 B2  -> Layer 24
         // F5B2h -> -2638/200= -13.19°
@@ -4566,7 +4566,7 @@ namespace sick_scan
               int numTmpLayer = numOfLayers;
 
 
-              cloud_.header.stamp = recvTimeStamp + rosDuration(config_.time_offset);
+              cloud_.header.stamp = recvTimeStamp + rosDuration::from_seconds(config_.time_offset);
 
 
               cloud_.header.frame_id = config_.frame_id;
