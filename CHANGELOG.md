@@ -8,6 +8,27 @@ features that will be removed in future versions **Removed** for deprecated feat
 
 ## Released ##
 
+### v2.6.1 - 
+  - **Added** V2.6.1: Support for RMS-1xxx binary protocol
+
+### v2.6.0 - 
+  - **Changed** V2.6.0: RMS configuration update, issue #7
+
+### v2.5.2 - 
+  - **Fixed**  Fix LSR-4xxx laserscan angles #28
+  - **Fixed**  Fix duplicated laserscan messages #28
+
+### v2.5.1 - 
+  - **Fixed**  Error after SOPAS command SetAccessMode #27
+
+### v2.5.0 - 
+  - **Fixed** Issue #24 (stop scanner at exit)
+  - **Added** new ros service SickScanExit to stop scanner and exit
+
+### v2.4.6 - 
+  - **Fixed** Corrected angle shift parameter for LMS-4xxx
+  - **Changed** Typo corrected
+
 ### v2.4.5 - 
   - **Changed** bugfix #158 (driver terminates), modified SOPAS-startup sequence.
 
