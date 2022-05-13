@@ -60,6 +60,8 @@ endif()
 
 if($ENV{ROS_VERSION})
     set(ROS_VERSION $ENV{ROS_VERSION})
+else()
+    set(ROS_VERSION 2)
 endif($ENV{ROS_VERSION})
 add_compile_options(-D__ROS_VERSION=${ROS_VERSION})
 if(ROS_VERSION EQUAL 0)
