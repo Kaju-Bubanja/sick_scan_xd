@@ -125,6 +125,9 @@ namespace sick_scan
 
     bool getDeviceIsRadar(void);
 
+    bool getTrackingModeSupported(void);
+    void setTrackingModeSupported(bool _trackingModeSupported);
+
     bool getUseBinaryProtocol(void);
 
     void setScanMirroredAndShifted(bool _scanMirroredAndShifted);
@@ -170,6 +173,10 @@ namespace sick_scan
 
     bool getUseScancfgList();
 
+    void setUseWriteOutputRanges(bool _useWriteOutputRanges);
+
+    bool getUseWriteOutputRanges();
+
     void setWaitForReady(bool _waitForReady);
 
     bool getWaitForReady();
@@ -189,7 +196,8 @@ namespace sick_scan
     double scanAngleShift;
     bool useBinaryProtocol;
     bool IntensityResolutionIs16Bit;
-    bool deviceIsRadar;
+    bool deviceIsRadar = false;
+    bool trackingModeSupported = false;
     bool useSafetyPasWD;
     int8_t encoderMode;
     bool CartographerCompatibility;
@@ -198,6 +206,7 @@ namespace sick_scan
     EVAL_FIELD_SUPPORT useEvalFields;
     int maxEvalFields;
     bool useScancfgList;
+    bool useWriteOutputRanges;
     bool waitForReady;
     bool frEchoFilterAvailable = false;
 

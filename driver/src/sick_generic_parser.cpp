@@ -282,6 +282,20 @@ namespace sick_scan
   }
 
   /*!
+  \brief set/get flag to mark the radar device supports selection of tracking modes.
+  By default, true for all radar devices except RMS-1xxx, otherwise false.
+  */
+bool ScannerBasicParam::getTrackingModeSupported(void)
+{
+  return (deviceIsRadar && trackingModeSupported);
+}
+void ScannerBasicParam::setTrackingModeSupported(bool _trackingModeSupported)
+{
+  trackingModeSupported = _trackingModeSupported;
+}
+
+
+  /*!
 \brief flag to mark mirroring of rotation direction
 \param _scanMirrored: false for normal mounting true for up side down or NAV 310
 \sa setScanMirrored
@@ -380,6 +394,16 @@ namespace sick_scan
     return this->useScancfgList;
   }
 
+  void ScannerBasicParam::setUseWriteOutputRanges(bool _useWriteOutputRanges)
+  {
+      this->useWriteOutputRanges = _useWriteOutputRanges;
+  }
+
+  bool ScannerBasicParam::getUseWriteOutputRanges()
+  {
+      return this->useWriteOutputRanges;
+  }
+
   void ScannerBasicParam::setWaitForReady(bool _waitForReady)
   {
     this->waitForReady = _waitForReady;
@@ -393,7 +417,7 @@ namespace sick_scan
    {
     this->frEchoFilterAvailable = _frEchoFilterAvailable;
   }
- 
+
   bool ScannerBasicParam::getFREchoFilterAvailable(void)
   {
     return this->frEchoFilterAvailable;
@@ -407,7 +431,8 @@ namespace sick_scan
   : numberOfLayers(0), numberOfShots(0), numberOfMaximumEchos(0), elevationDegreeResolution(0), angleDegressResolution(0), expectedFrequency(0),
      useBinaryProtocol(false), IntensityResolutionIs16Bit(false), deviceIsRadar(false), useSafetyPasWD(false), encoderMode(0),
      CartographerCompatibility(false), scanMirroredAndShifted(false), useEvalFields(EVAL_FIELD_UNSUPPORTED), maxEvalFields(0),
-     imuEnabled (false), scanAngleShift(0)
+     imuEnabled (false), scanAngleShift(0), useScancfgList(false), useWriteOutputRanges(false)
+
   {
     this->elevationDegreeResolution = 0.0;
     this->setUseBinaryProtocol(false);
@@ -480,6 +505,7 @@ namespace sick_scan
                     (int) basicParams.size(); i++) // set specific parameter for each scanner type - scanner type is identified by name
     {
       basicParams[i].setDeviceIsRadar(false); // Default
+      basicParams[i].setTrackingModeSupported(false); // Default
       basicParams[i].setScannerName(allowedScannerNames[i]);  // set scanner type for this parameter object
 
       if (basicParams[i].getScannerName().compare(SICK_SCANNER_MRS_1XXX_NAME) ==
@@ -493,6 +519,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(50.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(true);// Activate Imu for MRS1000
@@ -501,6 +528,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(true);
         basicParams[i].setFREchoFilterAvailable(true);
       }
@@ -515,6 +543,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(50.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -523,6 +552,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(true);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -536,6 +566,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -544,6 +575,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -557,6 +589,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -565,6 +598,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -577,14 +611,16 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(600.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
-        basicParams[i].setScanAngleShift(0);
+        basicParams[i].setScanAngleShift(-M_PI/2);
         basicParams[i].setScanMirroredAndShifted(false);
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -597,6 +633,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -605,6 +642,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(USE_EVAL_FIELD_TIM7XX_LOGIC);
         basicParams[i].setMaxEvalFields(48);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -617,6 +655,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(true); // Safety scanner
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -625,18 +664,20 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(USE_EVAL_FIELD_TIM7XX_LOGIC);
         basicParams[i].setMaxEvalFields(48);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
       if (basicParams[i].getScannerName().compare(SICK_SCANNER_LMS_5XX_NAME) == 0) // LMS_5xx - 1 Layer
       {
-        basicParams[i].setNumberOfMaximumEchos(1);
+        basicParams[i].setNumberOfMaximumEchos(5); // (1) LMS sends up to 5 echos
         basicParams[i].setNumberOfLayers(1);
         basicParams[i].setNumberOfShots(381);
         basicParams[i].setAngularDegreeResolution(0.5);
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -645,8 +686,9 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(USE_EVAL_FIELD_LMS5XX_LOGIC);
         basicParams[i].setMaxEvalFields(30);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
-        basicParams[i].setFREchoFilterAvailable(false);
+        basicParams[i].setFREchoFilterAvailable(true); // (false) // LMS uses echo filter settings to configure number of echos: "sWN FREchoFilter N" with N=0: first echo, N=1: all echos, N=2: last echo
       }
       if (basicParams[i].getScannerName().compare(SICK_SCANNER_LMS_1XX_NAME) == 0) // LMS_1xx - 1 Layer
       {
@@ -657,6 +699,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(25.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -665,6 +708,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(USE_EVAL_FIELD_LMS5XX_LOGIC);
         basicParams[i].setMaxEvalFields(30);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(true); // changed from false to true, see comment in sick_lms1xx.launch
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -677,6 +721,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -685,6 +730,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);// TODO Check this
         basicParams[i].setMaxEvalFields(30);
         basicParams[i].setUseScancfgList(true);
+        basicParams[i].setUseWriteOutputRanges(false); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(true);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -697,6 +743,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -705,6 +752,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);// TODO Check this
         basicParams[i].setMaxEvalFields(30);
         basicParams[i].setUseScancfgList(true);
+        basicParams[i].setUseWriteOutputRanges(false); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(true);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -718,6 +766,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(50.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -726,18 +775,20 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(true);
       }
-      if (basicParams[i].getScannerName().compare(SICK_SCANNER_LRS_4XXX_NAME) == 0) // LMS_5xx - 1 Layer
+      if (basicParams[i].getScannerName().compare(SICK_SCANNER_LRS_4XXX_NAME) == 0) // LRS_4XXX - 1 Layer
       {
-        basicParams[i].setNumberOfMaximumEchos(1);// TODO validate this
+        basicParams[i].setNumberOfMaximumEchos(1);
         basicParams[i].setNumberOfLayers(1);
         basicParams[i].setNumberOfShots(7201);
         basicParams[i].setAngularDegreeResolution(0.05);
         basicParams[i].setExpectedFrequency(12.5);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -745,9 +796,10 @@ namespace sick_scan
         basicParams[i].setScanMirroredAndShifted(false);
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
-        basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseScancfgList(true); // false // LRS4000 sets scan rate and angular resolution set by "sMN mCLsetscancfglist <mode>"
+        basicParams[i].setUseWriteOutputRanges(true); // false // LRS4000 sets the scan configuration by both "sMN mCLsetscancfglist <mode>" AND "sWN LMPoutputRange" (default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry)
         basicParams[i].setWaitForReady(false);
-        basicParams[i].setFREchoFilterAvailable(false);
+        basicParams[i].setFREchoFilterAvailable(true); // (false) // LRS4XXX uses echo filter settings to configure 1 echo, use filter_echos = 0 (first echo) for LRS4xxx
       }
       if (basicParams[i].getScannerName().compare(SICK_SCANNER_RMS_3XX_NAME) == 0) // Radar
       {
@@ -759,6 +811,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(0.00);
         basicParams[i].setUseBinaryProtocol(false); // use ASCII-Protocol
         basicParams[i].setDeviceIsRadar(true); // Device is a radar
+        basicParams[i].setTrackingModeSupported(true); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -767,6 +820,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -780,6 +834,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(0.00);
         basicParams[i].setUseBinaryProtocol(false); // use ASCII-Protocol
         basicParams[i].setDeviceIsRadar(true); // Device is a radar
+        basicParams[i].setTrackingModeSupported(false); // RMS 1xxx does not support selection of tracking modes
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -788,6 +843,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -800,6 +856,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(55.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -808,6 +865,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(true);
+        basicParams[i].setUseWriteOutputRanges(false); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(true);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -820,6 +878,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(55.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -828,6 +887,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(true);
+        basicParams[i].setUseWriteOutputRanges(false); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(true);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -840,6 +900,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(25.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -848,6 +909,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -860,6 +922,7 @@ namespace sick_scan
         basicParams[i].setExpectedFrequency(15.0);
         basicParams[i].setUseBinaryProtocol(true);
         basicParams[i].setDeviceIsRadar(false); // Default
+        basicParams[i].setTrackingModeSupported(false); // Default
         basicParams[i].setUseSafetyPasWD(false); // Default
         basicParams[i].setEncoderMode(-1); // Default
         basicParams[i].setImuEnabled(false);// Default
@@ -868,6 +931,7 @@ namespace sick_scan
         basicParams[i].setUseEvalFields(EVAL_FIELD_UNSUPPORTED);
         basicParams[i].setMaxEvalFields(0);
         basicParams[i].setUseScancfgList(false);
+        basicParams[i].setUseWriteOutputRanges(true); // default: use "sWN LMPoutputRange" if scan configuration not set by ScanCfgList-entry
         basicParams[i].setWaitForReady(false);
         basicParams[i].setFREchoFilterAvailable(false);
       }
@@ -1042,11 +1106,15 @@ namespace sick_scan
                         "Perhaps you should set the parameter time_increment to the expected value. This message will print every 60 seconds.",
                         expected_time_increment, time_increment, time_increment, scan_time, angle_increment*180.0/M_PI);
 #else
-        ROS_WARN_STREAM(
-            "The time_increment, scan_time and angle_increment values reported by the scanner are inconsistent! "
-            << "Expected time_increment: " << expected_time_increment << ", reported time_increment:" << time_increment << " "
-            << "(time_increment=" << time_increment << ", scan_time=" << scan_time << ", angle_increment=" << (angle_increment*180.0/M_PI) << "). "
-            << "Perhaps you should set the parameter time_increment to the expected value. This message will print every 60 seconds.");
+        static rosTime last_message_time(0);
+        if ((rosTimeNow() - last_message_time) > rosDurationFromSec(60)) {
+          last_message_time = rosTimeNow();
+          ROS_WARN_STREAM(
+              "The time_increment, scan_time and angle_increment values reported by the scanner are inconsistent! "
+              << "Expected time_increment: " << expected_time_increment << ", reported time_increment:" << time_increment << " "
+              << "(time_increment=" << time_increment << ", scan_time=" << scan_time << ", angle_increment=" << (angle_increment * 180.0 / M_PI) << "). "
+              << "Perhaps you should set the parameter time_increment to the expected value. This message will print every 60 seconds.");
+        }
 #endif
     }
     // ROS_DEBUG_STREAM("SickGenericParser::checkScanTiming(time_increment=" << time_increment << ", scan_time=" << scan_time << ", angle_increment=" << (angle_increment*180.0/M_PI)

@@ -67,13 +67,13 @@ ROS Device Driver for SICK lidar and radar sensors - supported scanner types:
 | MRS6124            | [6065086](https://www.sick.com/de/en/detection-and-ranging-solutions/3d-lidar-sensors/mrs6000/c/g448151)                         | 24 layer max. range: 200 m, ang. resol. 0.13 [deg] hor., 0.0625 [deg] ver. The SICK MRS6124 is a multi-layer, multi-echo 3D laser scanner that is geared towards rough outdoor environments. | ✔ [stable]|
 |                                                                               | Scan-Rate: 10 Hz                       |                 |
 | MRS1104            | [1081208](https://www.sick.com/sg/en/detection-and-ranging-solutions/3d-lidar-sensors/mrs1000/mrs1104c-111011/p/p495044)         | 4 layer max. range: 64 m, ang. resol. 0.25 [deg] hor., 2.50 [deg] ver.                                         | ✔ [stable]|
-|                    |                                                                                                                                  | Scan-Rate: 50 Hz, 4x12.5 Hz            |                 |https://cdn.sick.com/media/docs/4/04/504/Operating_instructions_RMS3xx_en_IM0075504.PDF
+|                    |                                                                                                                                  | Scan-Rate: 50 Hz, 4x12.5 Hz            |                 |
 |                    |                                                                                                                                  | Scan-Rate: 150 Hz, 4x37.5 Hz   |                 |
 | TiM240             | [1104981](https://www.sick.com/ag/en/detection-and-ranging-solutions/2d-lidar-sensors/tim2xx/tim240-2050300/p/p654443)           | 1 layer max. range: 10 m, ang. resol. 1.00 [deg], 240 [deg]| ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 14.5 Hz   |                 |
-| TiM433             | prototype  | 1 layer range: 0.05 m ... 15 m, ang. resol. 0.33 [deg], 240 [deg]| ✔ [prototype]|
+| TiM433             | prototype  | 1 layer range: 0.05 m ... 15 m, ang. resol. 0.33 [deg], 240 [deg]| ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 15.0 Hz   |                 |
-| TiM443             | prototype  | 1 layer range: 0.05 m ... 15 m, ang. resol. 0.33 [deg], 240 [deg]| ✔ [prototype]|
+| TiM443             | prototype  | 1 layer range: 0.05 m ... 15 m, ang. resol. 0.33 [deg], 240 [deg]| ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 15.0 Hz   |                 |
 | TiM551             | [1060445](https://www.sick.com/de/en/detection-and-ranging-solutions/2d-lidar-sensors/tim5xx/tim551-2050001/p/p343045)                 | 1 layer max. range: 10 m, ang. resol. 1.00[deg] | ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 15 Hz   |                 |
@@ -95,16 +95,16 @@ ROS Device Driver for SICK lidar and radar sensors - supported scanner types:
 |                    |                                                                                                                                  | Scan-Rate: 15 Hz   |                 |
 | LMS4xxx-Family     | [e.g. 1091423](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/lms4000/lms4111r-13000/p/p578044?ff_data) | 1 layer max. range: 3 m, ang. resol. 0,0833 [deg], opening angle: +/- 50 [deg] | ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 600 Hz   |                 |
-| LDMRS |   | 4 or 8 layer, max. range: 50/320 m, ang. resol. 0.025°/.../0.25 [deg] | ✔ [development]|
+| LDMRS |   | 4 or 8 layer, max. range: 50/320 m, ang. resol. 0.025°/.../0.25 [deg] | ✔ [stable]|
 |       |   | Scan-Rate: 12.5-50 Hz | |
-| LRS4000 |   | 1 layer, max. range: 130 m, ang. resol. 0.125/0.25/0.5 [deg]  | ✔ [development]|
+| LRS4000 | [1098855](https://www.sick.com/no/en/detection-and-ranging-solutions/2d-lidar-sensors/lrs4000/c/g555594)  | 1 layer, max. range: 130 m, ang. resol. 0.125/0.25/0.5 [deg]  | ✔ [stable]|
 |       |   | Scan-Rate: 12.5-25 Hz | |
-| NAV310     | [e.g. 1052928](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/nav3xx/nav350-3232/p/p256041) | 1 layer max. range: 250 m, ang. resol. 0.125 [deg] | ✔ [stable]|
+| NAV310     | [e.g. 1060834](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/nav3xx/nav310-3211/p/p349345) | 1 layer max. range: 250 m, ang. resol. 0.125 - 1.0 [deg] | ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 8 Hz   |                 |
 | NAV210+NAV245      | [e.g.    1074308](https://www.sick.com/de/de/mess-und-detektionsloesungen/2d-lidar-sensoren/nav2xx/c/g356151) | 1 layer max. range: 100 m, ang. resol. 0.25 [deg]| ✔ [stable]|
 |                    |                                                                                                                                  | Scan-Rate: 25 Hz   |                 |
 | RMS3xx             | [8021530](https://cdn.sick.com/media/docs/4/04/504/Operating_instructions_RMS3xx_en_IM0075504.PDF)| Radar Sensor | ✔ [stable]|
-| RMS1xxx             | [1107598](https://www.sick.com/de/en/detection-and-ranging-solutions/radar-sensors/rms1000/rms1731c-636111/p/p660833)| 1D Radar Sensor | ✔ [development]|
+| RMS1xxx             | [1107598](https://www.sick.com/de/en/detection-and-ranging-solutions/radar-sensors/rms1000/rms1731c-636111/p/p660833)| 1D Radar Sensor | ✔ [stable]|
 
 Note:
 * LDMRS family is currently not supported on Windows.
@@ -295,6 +295,10 @@ To install sick_scan_xd on Windows with ROS-2, follow the steps below:
 Devices of the MRS6xxx and MRS1xxx series are available with an optionally built-in IMU.
 Further information on the implementation and use of the experimental Imu support can be found on the [Imu page](doc/IMU.md).
 
+## Radar support
+
+See [radar documentation](doc/radar.md) for RMS1xxx and RMS3xx support.
+
 ## Run sick_scan driver
 
 The sick_scan driver can be started on the command line by `sick_generic_caller <launchfile> [hostname:=<ip-address>]`. The start process varies slightly depending on the target OS:
@@ -438,6 +442,10 @@ ros2 launch sick_scan <name>.launch.py <param>:=<value>
 ```
 E.g. for LMS-5xx: `ros2 launch sick_scan sick_lms_5xx.launch.py hostname:=192.168.0.1`
 
+The launch.py-files on ROS-2 passes the corresponding launch-file to the driver: [sick_lms_5xx.launch.py](launch/sick_lms_5xx.launch.py) gives an example for LMS-5xx. Parameter can be overwritten
+* either by commandline, e.g. <br/> `ros2 launch sick_scan sick_lms_5xx.launch.py hostname:=192.168.0.1`, 
+* or by passing additional arguments in the launch.py-file, e.g. <br/> `node = Node(package='sick_scan', executable='sick_generic_caller', arguments=[launch_file_path, 'hostname:=192.168.0.1'])`
+
 
 ### Start Multiple Nodes
 
@@ -534,6 +542,15 @@ ros2 run sick_scan sick_generic_caller sick_tim_5xx.launch hostname:=192.168.0.7
 
 - **Field monitoring**: The **LMS1xx**, **LMS5xx**, **TiM7xx** and **TiM7xxS** families have [extended settings for field monitoring](./doc/field_monitoring_extensions.md).
 
+- **Radar devices**: For radar devices (RMS-1xxx, RMS-3xx), radar raw targets or radar objects or both can be tracked and transmitted. You can activate parameter transmit_raw_targets, transmit_objects or both in the launchfile:
+   ```
+   <param name="transmit_raw_targets" type="bool" value="false"/>
+   <param name="transmit_objects" type="bool" value="true"/>
+   ```
+   By default, radar objects are tracked.
+
+
+
 ### ROS services
 
 On ROS-1 and ROS-2, services can be used to send COLA commands to the sensor. This can be very helpful for diagnosis, e.g. by querying the device status or its id.
@@ -562,10 +579,28 @@ ros2 service call /SCreboot sick_scan/srv/SCrebootSrv "{}"           # execute a
 ros2 service call /SCsoftreset sick_scan/srv/SCsoftresetSrv "{}"     # save current parameter and shut down device
 ```
 
+Use ros service `SickScanExit` to stop the scanner and driver:
+```
+rosservice call /sick_nav_3xx/SickScanExit "{}" # stop scanner and driver on ROS-1
+ros2 service call /SickScanExit sick_scan/srv/SickScanExitSrv "{}" # stop scanner and driver on ROS-2
+```
+
 Note:
 * The COLA commands are sensor specific. See the user manual and telegram listing for further details.
 * ROS services require installation of ROS-1 or ROS-2, i.e. services for Cola commands are currently not supported on native Linux or native Windows.
 * ROS services are currently not available for the LDMRS.
+* Some SOPAS commands like `sMN SetAccessMode 3 F4724744` stop the current measurement. In this case, the driver restarts after a timeout (5 seconds by default). To process those SOPAS commands without restart, you can
+   * send `sMN LMCstartmeas` and `sMN Run` to switch again into measurement mode within the timeout, or
+   * increase the driver timeout `read_timeout_millisec_default` in the launch-file.
+
+Example sequence with stop and start measurement to set a particle filter (TiM-7xxx on ROS-1):
+```
+rosservice call /sick_tim_7xx/ColaMsg "{request: 'sMN SetAccessMode 3 F4724744'}"
+rosservice call /sick_tim_7xx/ColaMsg "{request: 'sRN LFPparticle'}" # response: "sRA LFPparticle \\x00\\x01\\xf4"
+rosservice call /sick_tim_7xx/ColaMsg "{request: 'sWN LFPparticle 0101F4'}" # response: "sWA LFPparticle"
+rosservice call /sick_tim_7xx/ColaMsg "{request: 'sMN LMCstartmeas'}"
+rosservice call /sick_tim_7xx/ColaMsg "{request: 'sMN Run'}"
+```
 
 ### Driver states, timeouts
 
@@ -645,7 +680,7 @@ Overview of the tools:
 
 ## Simulation
 
-For unittests without sensor hardware, a simple test server is provided. To build the test server, activate cmake option `ENABLE_EMULATOR` in CMakeLists.txt and rebuild sick_scan. By default, option `ENABLE_EMULATOR` is switched off.
+For unittests without sensor hardware, a simple test server is provided. To build the test server, call either cmake with option `-DCMAKE_ENABLE_EMULATOR=1`, or activate cmake option `ENABLE_EMULATOR` in CMakeLists.txt. Then rebuild sick_scan_xd. By default, option `ENABLE_EMULATOR` is switched off.
 
 Please note that this just builds a simple test server for basic unittests of sick_scan drivers. Its purpose is to run basic tests and to help with diagnosis in case of issues. It does not emulate a real scanner!
 
@@ -726,7 +761,6 @@ Further examples are provided in folder `test/scripts`.
 ## FAQ
 
 * FAQ: [doc/faq.md](doc/faq.md)
-* ROS installation: [doc/InstallROS2.md](doc/InstallROS2.md)
 
 ## Troubleshooting
 
