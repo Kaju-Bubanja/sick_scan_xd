@@ -3943,7 +3943,7 @@ namespace sick_scan
                     }
                     else
                     {
-                      msg.header.stamp = recvTimeStamp + rosDuration(config_.time_offset); // update timestamp by software-pll
+                      msg.header.stamp = recvTimeStamp + rosDuration::from_seconds(config_.time_offset); // update timestamp by software-pll
                     }
                   }
 
