@@ -14,6 +14,13 @@ else()
 endif()
 option(BUILD_DEBUG_TARGET "Build debug target" ON) # OFF (release) or ON (development)
 
+set(LDMRS 0)
+
+if(LDMRS EQUAL 0)
+    set(BUILD_WITH_LDMRS_SUPPORT OFF)
+    message(STATUS "NOT building with ldmrs: ${BUILD_WITH_LDMRS_SUPPORT}")
+endif()
+
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")
 # if(NOT WIN32) # Note: compiler option -Wshadow generates lots of warnings in ros header files. Therefore it's deactivated by default, but can be usefull for development and testing.
@@ -53,6 +60,8 @@ endif()
 
 if($ENV{ROS_VERSION})
     set(ROS_VERSION $ENV{ROS_VERSION})
+else()
+    set(ROS_VERSION 2)
 endif($ENV{ROS_VERSION})
 add_compile_options(-D__ROS_VERSION=${ROS_VERSION})
 if(ROS_VERSION EQUAL 0)
@@ -566,8 +575,12 @@ if(ROS_VERSION EQUAL 2)
         ${LDMRS_TARGET_DEPENDENCIES}
     )
 
-    rosidl_target_interfaces(sick_scan_lib ${PROJECT_NAME} "rosidl_typesupport_cpp")
-    rosidl_target_interfaces(sick_scan_shared_lib ${PROJECT_NAME} "rosidl_typesupport_cpp")
+    rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+    target_link_libraries(sick_scan_lib "${cpp_typesupport_target}")
+    rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+    target_link_libraries(sick_scan_shared_lib "${cpp_typesupport_target}")
+#    rosidl_target_interfaces(sick_scan_lib ${PROJECT_NAME} "rosidl_typesupport_cpp")
+#    rosidl_target_interfaces(sick_scan_shared_lib ${PROJECT_NAME} "rosidl_typesupport_cpp")
     # rosidl_target_interfaces(sick_generic_caller ${PROJECT_NAME} "rosidl_typesupport_cpp")
         
 endif(ROS_VERSION EQUAL 2)
@@ -665,8 +678,8 @@ if(ENABLE_EMULATOR AND (NOT WIN32 OR ROS_VERSION EQUAL 2)) # sick_scan_emulator 
             DESTINATION share/${PROJECT_NAME})
         install(DIRECTORY test/emulator/yaml/
             DESTINATION share/${PROJECT_NAME})
-        install(DIRECTORY test/emulator/scandata/
-            DESTINATION share/${PROJECT_NAME})
+#        install(DIRECTORY test/emulator/scandata/
+#            DESTINATION share/${PROJECT_NAME})
     endif()
 endif()
 
