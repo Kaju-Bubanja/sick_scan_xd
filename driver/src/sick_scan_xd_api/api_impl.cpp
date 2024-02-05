@@ -63,6 +63,7 @@ static SickScanPointCloudMsg convertPointCloudMsg(const sick_scan_xd::PointCloud
     export_msg.header.timestamp_sec = sec(msg.header.stamp); // msg.header.stamp.sec;
     export_msg.header.timestamp_nsec = nsec(msg.header.stamp); // msg.header.stamp.nsec;
     strncpy(export_msg.header.frame_id, msg.header.frame_id.c_str(), sizeof(export_msg.header.frame_id) - 2);
+    strncpy(export_msg.topic, msg_with_echo.topic.c_str(), sizeof(export_msg.topic) - 2);   
     export_msg.width = msg.width;
     export_msg.height = msg.height;
     export_msg.is_bigendian = msg.is_bigendian;
@@ -254,7 +255,7 @@ static SickScanRadarScan convertRadarScanMsg(const sick_scan_msg::RadarScan& src
         dst_msg.radarpreheader.iencoderspeed[n] = src_msg.radarpreheader.radarpreheaderarrayencoderblock[n].iencoderspeed;
     }
     // Copy radar target pointcloud data
-    sick_scan_xd::PointCloud2withEcho targets_with_echo(&src_msg.targets, 1, 0);
+    sick_scan_xd::PointCloud2withEcho targets_with_echo(&src_msg.targets, 1, 0, "radar");
     dst_msg.targets = convertPointCloudMsg(targets_with_echo);
     // Copy radar object data
     dst_msg.objects.size = src_msg.objects.size();

@@ -147,6 +147,7 @@ typedef struct SickScanPointCloudMsgType // equivalent to ros::std_msgs::PointCl
   uint8_t is_dense;               // True if there are no invalid points
   int32_t num_echos;              // number of echos
   int32_t segment_idx;            // segment index (or -1 if pointcloud contains data from multiple segments)
+  char topic[256];                // ros topic this pointcloud is published
 } SickScanPointCloudMsg;
 
 typedef struct SickScanVector3MsgType // equivalent to geometry_msgs/Vector3

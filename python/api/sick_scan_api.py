@@ -168,8 +168,9 @@ class SickScanPointCloudMsg(ctypes.Structure):
         ("data", SickScanUint8Array),                # Actual point data, size is (row_step*height)
         ("is_dense", ctypes.c_uint8),                # True if there are no invalid points
         ("num_echos", ctypes.c_int32),               # number of echos
-        ("segment_idx", ctypes.c_int32)              # segment index (or -1 if pointcloud contains data from multiple segments)
-    ]
+        ("segment_idx", ctypes.c_int32),             # segment index (or -1 if pointcloud contains data from multiple segments)
+        ("topic", ctypes.c_char * 256)               # ros topic this pointcloud is published
+   ]
 
 class SickScanVector3Msg(ctypes.Structure):
     """ 

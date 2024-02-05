@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.5)
 project(sick_scan_xd)
 
 # Emulator build options
-option(ENABLE_EMULATOR "Build emulator for offline and unittests (ON) or without emulator (OFF)" ON)
+option(ENABLE_EMULATOR "Build emulator for offline and unittests (ON) or without emulator (OFF)" OFF)
 if(CMAKE_ENABLE_EMULATOR EQUAL 1)
     set(ENABLE_EMULATOR ON CACHE BOOL "Build emulator for offline and unittests (ON) or without emulator (OFF)" FORCE) # OFF (release) or ON (development)
     message(STATUS "Option CMAKE_ENABLE_EMULATOR = ${CMAKE_ENABLE_EMULATOR}, building ${PROJECT_NAME} with emulator support, ENABLE_EMULATOR=${ENABLE_EMULATOR}")
@@ -95,9 +95,14 @@ elseif(DEFINED SICK_TARGET_ENDIANESS)
 endif()
 
 # ROS Version
+message(STATUS "ROS_VERSION precheck: ENV{ROS_VERSION}=$ENV{ROS_VERSION} ROS_VERSION=${ROS_VERSION} CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}")
+if(DEFINED CMAKE_PREFIX_PATH AND "${CMAKE_PREFIX_PATH}" STREQUAL "/opt/ros/humble")
+    set(ROS_VERSION 2)
+endif()
 if(NOT DEFINED ROS_VERSION AND DEFINED ENV{ROS_VERSION})
     set(ROS_VERSION $ENV{ROS_VERSION})
 endif()
+message(STATUS "ROS_VERSION=${ROS_VERSION}")
 add_compile_options(-D__ROS_VERSION=${ROS_VERSION})
 if(ROS_VERSION EQUAL 0)
     add_compile_options(-DROSSIMU)
@@ -720,23 +725,38 @@ if(ROS_VERSION EQUAL 2)
 endif()
 
 # Build test and usage example for sick_scan_xd_api
-add_executable(sick_scan_xd_api_test
-    driver/src/sick_scan_xd_api/sick_scan_api_converter.cpp
-    test/src/sick_scan_xd_api/sick_scan_xd_api_test.cpp
-    test/src/sick_scan_xd_api/sick_scan_xd_api_wrapper.c
-    test/src/sick_scan_xd_api/toojpeg/toojpeg.cpp
-)
-target_include_directories(sick_scan_xd_api_test PUBLIC test/src/sick_scan_xd_api/toojpeg)
-if(NOT WIN32)
-    target_link_libraries(sick_scan_xd_api_test "dl") # link with dl for dynamic library loading
-    if(ROS_VERSION EQUAL 0)
-        target_link_libraries(sick_scan_xd_api_test "pthread") # pthread required for std::thread
-        target_link_options(sick_scan_xd_api_test PUBLIC "LINKER:--no-as-needed") # fixes exception "Enable multithreading to use std::thread: Operation not permitted" 
-    elseif(ROS_VERSION EQUAL 1)
-        target_link_libraries(sick_scan_xd_api_test ${catkin_LIBRARIES})
-        add_dependencies(sick_scan_xd_api_test ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-    elseif(ROS_VERSION EQUAL 2)
-        target_link_libraries(sick_scan_xd_api_test "pthread") # pthread required for std::thread
+# For ROS-1 and ROS-2:
+# - sick_scan_xd_api_test with is deactivated by default
+#   to avoid phtread dependencies for bloom releases
+# - sick_scan_xd_api_test for development and test only
+# Native Windows and Linux (ROS_VERSION==0): 
+# - build sick_scan_xd_api_test (development, test and usage example)
+if(ROS_VERSION EQUAL 0) # build API test on native Windows or Linux
+    set(BUILD_SICK_SCAN_XD_API_TEST 1)
+elseif(${ENABLE_EMULATOR} OR ENABLE_EMULATOR EQUAL ON) # i.e. development
+    set(BUILD_SICK_SCAN_XD_API_TEST 1)
+else()
+    set(BUILD_SICK_SCAN_XD_API_TEST 0)
+endif()
+if(BUILD_SICK_SCAN_XD_API_TEST EQUAL 1)
+    add_executable(sick_scan_xd_api_test
+        driver/src/sick_scan_xd_api/sick_scan_api_converter.cpp
+        test/src/sick_scan_xd_api/sick_scan_xd_api_test.cpp
+        test/src/sick_scan_xd_api/sick_scan_xd_api_wrapper.c
+        test/src/sick_scan_xd_api/toojpeg/toojpeg.cpp
+    )
+    target_include_directories(sick_scan_xd_api_test PUBLIC test/src/sick_scan_xd_api/toojpeg)
+    if(NOT WIN32)
+        target_link_libraries(sick_scan_xd_api_test "dl") # link with dl for dynamic library loading
+        if(ROS_VERSION EQUAL 0)
+            target_link_libraries(sick_scan_xd_api_test "pthread") # pthread required for std::thread
+            target_link_options(sick_scan_xd_api_test PUBLIC "LINKER:--no-as-needed") # fixes exception "Enable multithreading to use std::thread: Operation not permitted" 
+        elseif(ROS_VERSION EQUAL 1)
+            target_link_libraries(sick_scan_xd_api_test ${catkin_LIBRARIES})
+            add_dependencies(sick_scan_xd_api_test ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+        elseif(ROS_VERSION EQUAL 2)
+            target_link_libraries(sick_scan_xd_api_test "pthread") # pthread required for std::thread
+        endif()
     endif()
 endif()
 
@@ -766,10 +786,10 @@ if(ROS_VERSION EQUAL 1)
     install(TARGETS sick_generic_caller
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-    install(TARGETS sick_scan_xd_api_test
-        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
-    # install(TARGETS ${PROJECT_NAME}_test RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+    if(BUILD_SICK_SCAN_XD_API_TEST EQUAL 1)
+        install(TARGETS sick_scan_xd_api_test
+            RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+    endif()
 
     install(FILES include/sick_scan/abstract_parser.h
         include/sick_scan/sick_scan_common.h
@@ -791,14 +811,13 @@ if(ROS_VERSION EQUAL 1)
 endif()
 
 if(ROS_VERSION EQUAL 2)
-    install(TARGETS sick_generic_caller sick_scan_xd_api_test
-        DESTINATION lib/${PROJECT_NAME})
 
-    install(TARGETS ${PROJECT_NAME}_lib ${PROJECT_NAME}_shared_lib
-        DESTINATION lib)
-
-    install(DIRECTORY launch
-        DESTINATION share/${PROJECT_NAME})
+    if(BUILD_SICK_SCAN_XD_API_TEST EQUAL 1)
+        install(TARGETS sick_scan_xd_api_test DESTINATION lib/${PROJECT_NAME})
+    endif()
+    install(TARGETS sick_generic_caller DESTINATION lib/${PROJECT_NAME})
+    install(TARGETS ${PROJECT_NAME}_lib ${PROJECT_NAME}_shared_lib DESTINATION lib)
+    install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
         
     ament_package()        
 endif()
