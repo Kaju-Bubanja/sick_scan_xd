@@ -532,7 +532,7 @@ void sick_scansegment_xd::RosMsgpackPublisher::convertPointsToCustomizedFieldsCl
   pointcloud_msg.header.stamp.sec = timestamp_sec;
 #if defined __ROS_VERSION && __ROS_VERSION > 1
   pointcloud_msg.header.stamp.nanosec = timestamp_nsec;
-#elif defined __ROS_VERSION && __ROS_VERSION > 0
+#else
   pointcloud_msg.header.stamp.nsec = timestamp_nsec;
 #endif
   pointcloud_msg.header.frame_id = pointcloud_cfg.frameid();

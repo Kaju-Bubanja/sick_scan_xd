@@ -95,8 +95,9 @@ def pySickScanCartesianPointCloudMsgToXYZ(pointcloud_msg):
 # Callback for cartesian pointcloud messages
 def pySickScanCartesianPointCloudMsgCallback(api_handle, pointcloud_msg):
     pointcloud_msg = pointcloud_msg.contents # dereference msg pointer (pointcloud_msg = pointcloud_msg[0])
-    print("pySickScanCartesianPointCloudMsgCallback (ROS-{}): api_handle={}, {}x{} pointcloud, {} echo(s), segment {}, {} fields, frame_id \"{}\", topic \"{}\"".format(
-        __ROS_VERSION, api_handle, pointcloud_msg.width, pointcloud_msg.height, pointcloud_msg.num_echos , pointcloud_msg.segment_idx, pointcloud_msg.fields.size, pointcloud_msg.header.frame_id, pointcloud_msg.topic))
+    print("pySickScanCartesianPointCloudMsgCallback (ROS-{}): api_handle={}, {}x{} pointcloud, {} echo(s), segment {}, {} fields, frame_id \"{}\", topic {}, timestamp {}.{:06d}".format(
+        __ROS_VERSION, api_handle, pointcloud_msg.width, pointcloud_msg.height, pointcloud_msg.num_echos , pointcloud_msg.segment_idx, pointcloud_msg.fields.size, 
+        pointcloud_msg.header.frame_id, pointcloud_msg.topic, pointcloud_msg.header.timestamp_sec, pointcloud_msg.header.timestamp_nsec))
     global api_test_settings
     # Note: Pointcloud conversion and visualization consumes cpu time, therefore we convert and publish the cartesian pointcloud with low frequency.
     cur_timestamp = datetime.datetime.now()
@@ -112,8 +113,9 @@ def pySickScanCartesianPointCloudMsgCallback(api_handle, pointcloud_msg):
 # Callback for polar pointcloud messages
 def pySickScanPolarPointCloudMsgCallback(api_handle, pointcloud_msg):
     pointcloud_msg = pointcloud_msg.contents # dereference msg pointer (pointcloud_msg = pointcloud_msg[0])
-    print("pySickScanPolarPointCloudMsgCallback (ROS-{}): api_handle={}, {}x{} pointcloud, {} echo(s), segment {}, {} fields, frame_id \"{}\", topic \"{}\"".format(
-        __ROS_VERSION, api_handle, pointcloud_msg.width, pointcloud_msg.height, pointcloud_msg.num_echos , pointcloud_msg.segment_idx, pointcloud_msg.fields.size, pointcloud_msg.header.frame_id, pointcloud_msg.topic))
+    print("pySickScanPolarPointCloudMsgCallback (ROS-{}): api_handle={}, {}x{} pointcloud, {} echo(s), segment {}, {} fields, frame_id \"{}\", topic {}, timestamp {}.{:06d}".format(
+        __ROS_VERSION, api_handle, pointcloud_msg.width, pointcloud_msg.height, pointcloud_msg.num_echos , pointcloud_msg.segment_idx, pointcloud_msg.fields.size, 
+        pointcloud_msg.header.frame_id, pointcloud_msg.topic, pointcloud_msg.header.timestamp_sec, pointcloud_msg.header.timestamp_nsec))
     if __ROS_VERSION == 1:
         # Convert polar pointcloud_msg to cartesian ros pointcloud and publish.
         # Note: Pointcloud conversion from polar to cartesian is too cpu-intensive to process all segments from a Multiscan136.
