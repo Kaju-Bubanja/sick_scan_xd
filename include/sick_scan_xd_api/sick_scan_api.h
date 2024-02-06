@@ -545,6 +545,14 @@ SICK_SCAN_API_DECLSPEC_EXPORT int32_t SickScanApiDeregisterLogMsg(SickScanApiHan
 // Query current status and status message
 SICK_SCAN_API_DECLSPEC_EXPORT int32_t SickScanApiGetStatus(SickScanApiHandle apiHandle, int32_t* status_code, char* message_buffer, int32_t message_buffer_size);
 
+// Set verbose level 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR, 4=FATAL or 5=QUIET (equivalent to ros::console::levels),
+// i.e. print messages on console above the given verbose level.
+// Default verbose level is 1 (INFO), i.e. print informational, warnings and error messages.
+SICK_SCAN_API_DECLSPEC_EXPORT int32_t SickScanApiSetVerboseLevel(SickScanApiHandle apiHandle, int32_t verbose_level);
+
+// Returns the current verbose level 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR, 4=FATAL or 5=QUIET. Default verbose level is 1 (INFO)
+SICK_SCAN_API_DECLSPEC_EXPORT int32_t SickScanApiGetVerboseLevel(SickScanApiHandle apiHandle);
+
 /*
 *  Polling functions
 */

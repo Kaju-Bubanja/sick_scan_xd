@@ -1365,6 +1365,53 @@ int32_t SickScanApiGetStatus(SickScanApiHandle apiHandle, int32_t* status_code, 
     return SICK_SCAN_API_ERROR;
 }
 
+// Set verbose level 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR, 4=FATAL or 5=QUIET (equivalent to ros::console::levels),
+// i.e. print messages on console above the given verbose level.
+// Default verbose level is 1 (INFO), i.e. print informational, warnings and error messages.
+int32_t SickScanApiSetVerboseLevel(SickScanApiHandle apiHandle, int32_t verbose_level)
+{
+    try
+    {
+        if (apiHandle == 0)
+        {
+            ROS_ERROR_STREAM("## ERROR SickScanApiSetVerboseLevel(): invalid apiHandle");
+            return SICK_SCAN_API_NOT_INITIALIZED;
+        }
+        setVerboseLevel(verbose_level);
+        return SICK_SCAN_API_SUCCESS;
+    }
+    catch(const std::exception& e)
+    {
+        ROS_ERROR_STREAM("## ERROR SickScanApiSetVerboseLevel(): exception " << e.what());
+    }
+    catch(...)
+    {
+        ROS_ERROR_STREAM("## ERROR SickScanApiSetVerboseLevel(): unknown exception ");
+    }
+    return SICK_SCAN_API_ERROR;
+}
+
+// Returns the current verbose level 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR, 4=FATAL or 5=QUIET. Default verbose level is 1 (INFO)
+int32_t SickScanApiGetVerboseLevel(SickScanApiHandle apiHandle)
+{
+    int32_t verbose_level = 1;
+    try
+    {
+        if (apiHandle == 0)
+            ROS_ERROR_STREAM("## ERROR getVerboseLevel(): invalid apiHandle");
+        verbose_level = getVerboseLevel();
+    }
+    catch(const std::exception& e)
+    {
+        ROS_ERROR_STREAM("## ERROR getVerboseLevel(): exception " << e.what());
+    }
+    catch(...)
+    {
+        ROS_ERROR_STREAM("## ERROR getVerboseLevel(): unknown exception ");
+    }
+    return verbose_level;
+}
+
 // Notifies all registered log message listener, i.e. all registered listener callbacks are called for all messages of type INFO, WARN, ERROR or FATAL 
 void notifyLogMessageListener(int msg_level, const std::string& message)
 {
