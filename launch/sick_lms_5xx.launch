@@ -55,9 +55,9 @@ Check IP-address, if you scanner is not found after roslaunch.
         <param name="scan_freq" type="double" value="25" />
          -->
         <param name="start_services" type="bool" value="True"/> <!-- start ros service for cola commands -->
-        <param name="activate_lferec" type="bool" value="True"/> <!-- activate field monitoring by lferec messages -->
-        <param name="activate_lidoutputstate" type="bool" value="True"/> <!-- activate field monitoring by lidoutputstate messages -->
-        <param name="activate_lidinputstate" type="bool" value="True"/> <!-- activate field monitoring by lidinputstate messages -->
+        <param name="activate_lferec" type="bool" value="False"/> <!-- activate field monitoring by lferec messages -->
+        <param name="activate_lidoutputstate" type="bool" value="False"/> <!-- activate field monitoring by lidoutputstate messages -->
+        <param name="activate_lidinputstate" type="bool" value="False"/> <!-- activate field monitoring by lidinputstate messages -->
 
         <param name="message_monitoring_enabled" type="bool" value="True" />      <!-- Enable message monitoring with reconnect+reinit in case of timeouts, default: true -->
         <param name="read_timeout_millisec_default" type="int" value="5000"/>     <!-- 5 sec read timeout in operational mode (measurement mode), default: 5000 milliseconds -->
