@@ -4,9 +4,9 @@
     <!-- Launch sick_picoscan -->
     <!-- env name="ROSCONSOLE_CONFIG_FILE" value="/tmp/rosconsole_loglevel_warn.conf" / -->
     <arg name="hostname" default="192.168.0.1"/>  <!-- IP address of picoScan150, overwrites default ip address "192.168.0.1" in sick_scansegment_xd.yaml -->
-    <arg name="udp_receiver_ip" default=""/>        <!-- UDP destination IP address (ip address of udp receiver), overwrites default in sick_scansegment_xd.yaml -->
+    <arg name="udp_receiver_ip" default="192.168.0.2"/>        <!-- UDP destination IP address (ip address of udp receiver), overwrites default in sick_scansegment_xd.yaml -->
     <arg name="nodename" default="sick_picoscan"/>
-    <arg name="publish_frame_id" default="world" />                                 <!-- frame id of ros Laserscan messages, default: "world_<layer-id>" = "world_1" -->
+    <arg name="publish_frame_id" default="cloud" />                                 <!-- frame id of ros Laserscan messages, default: "world_<layer-id>" = "world_1" -->
     <arg name="publish_laserscan_segment_topic" default="scan_segment" />           <!-- topic of ros Laserscan segment messages -->
     <arg name="publish_laserscan_fullframe_topic" default="scan_fullframe" />       <!-- topic of ros Laserscan fullframe messages -->
     <arg name="add_transform_xyz_rpy" default="0,0,0,0,0,0"/>
@@ -221,7 +221,7 @@
         <param name="cloud_all_fields_segments" type="string" value="coordinateNotation=3 updateMethod=1 fields=x,y,z,i,range,azimuth,elevation,layer,echo,reflector echos=0,1,2 layers=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 reflectors=0,1 infringed=0,1 rangeFilter=0,999,0 topic=/cloud_all_fields_segments frameid=world publish=1"/>
 
         <!-- cloud_all_fields_fullframe: all fields (x,y,z,i,range,azimuth,elevation,layer,echo,reflector), fullframe, all echos, all layers, range filter off -->
-        <param name="cloud_all_fields_fullframe" type="string" value="coordinateNotation=3 updateMethod=0 fields=x,y,z,i,range,azimuth,elevation,layer,echo,reflector echos=0,1,2 layers=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 reflectors=0,1 infringed=0,1 rangeFilter=0,999,0 topic=/cloud_all_fields_fullframe frameid=world publish=1"/>
+        <param name="cloud_all_fields_fullframe" type="string" value="coordinateNotation=3 updateMethod=0 fields=x,y,z,i,range,azimuth,elevation,layer,echo,reflector echos=0,1,2 layers=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 reflectors=0,1 infringed=0,1 rangeFilter=0,999,0 topic=/cloud frameid=cloud publish=1"/>
 
     </node>
 
