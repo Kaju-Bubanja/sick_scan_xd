@@ -145,3 +145,9 @@ LD-LRS3611
 LD-OEM1500
 LD-OEM1501
 multiScan100
+
+To BUILD:
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RELEASE -DROS_VERSION=2 -DLDMRS=0 --packages-select sick_scan_xd
+
+To RUN:
+ros2 run sick_scan_xd sick_generic_caller ./src/sick_scan_xd/launch/sick_picoscan.launch
