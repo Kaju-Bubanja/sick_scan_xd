@@ -3859,6 +3859,7 @@ namespace sick_scan
           int numEchos = 0;
           int echoMask = 0;
           bool publishPointCloud = true;
+          uint32_t SystemCountScan = 0;
 
           if (useBinaryProtocol)
           {
@@ -3920,7 +3921,7 @@ namespace sick_scan
                   int numOfEncoders = 0;
                   int numberOf16BitChannels = 0;
                   int numberOf8BitChannels = 0;
-                  uint32_t SystemCountScan = 0;
+//                  uint32_t SystemCountScan = 0;
                   static uint32_t lastSystemCountScan = 0;// this variable is used to ensure that only the first time stamp of an multi layer scann is used for PLL updating
                   uint32_t SystemCountTransmit = 0;
 
