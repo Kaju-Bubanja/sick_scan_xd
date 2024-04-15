@@ -3989,6 +3989,7 @@ namespace sick_scan
                     }
                     else
                     {
+                      ROS_INFO_STREAM("Ticks: " << SystemCountScan);
                       msg.header.stamp = rosTime(SystemCountScan / 1000000, SystemCountScan % 1000000);
                     }
                   }
@@ -4681,7 +4682,7 @@ namespace sick_scan
               int numTmpLayer = numOfLayers;
 
 
-              cloud_.header.stamp = recvTimeStamp + rosDuration::from_seconds(config_.time_offset);
+              cloud_.header.stamp = rosTime(SystemCountScan / 1000000, SystemCountScan % 1000000);
 
 
               cloud_.header.frame_id = config_.frame_id;
