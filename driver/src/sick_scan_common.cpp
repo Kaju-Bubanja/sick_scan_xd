@@ -3990,7 +3990,6 @@ namespace sick_scan
                     }
                     else
                     {
-                      ROS_INFO_STREAM("Ticks: " << SystemCountScan);
                       msg.header.stamp = rosTime(SystemCountScan / 1000000, SystemCountScan % 1000000);
                     }
                   }
