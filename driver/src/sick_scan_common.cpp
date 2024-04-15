@@ -3990,7 +3990,7 @@ namespace sick_scan
                     }
                     else
                     {
-                      msg.header.stamp = rosTime(SystemCountScan / 1000000, SystemCountScan % 1000000);
+                      msg.header.stamp = rosTime(SystemCountScan / 1000000, (SystemCountScan % 1000000)*1000);
                     }
                   }
 
@@ -4682,7 +4682,7 @@ namespace sick_scan
               int numTmpLayer = numOfLayers;
 
 
-              cloud_.header.stamp = rosTime(SystemCountScan / 1000000, SystemCountScan % 1000000);
+              cloud_.header.stamp = rosTime(SystemCountScan / 1000000, (SystemCountScan % 1000000)*1000);
 
 
               cloud_.header.frame_id = config_.frame_id;
