@@ -3989,7 +3989,7 @@ namespace sick_scan
                     }
                     else
                     {
-                      msg.header.stamp = recvTimeStamp + rosDuration::from_seconds(config_.time_offset); // update timestamp by software-pll
+                      msg.header.stamp = rosTime(SystemCountScan / 1000000, SystemCountScan % 1000000);
                     }
                   }
 
